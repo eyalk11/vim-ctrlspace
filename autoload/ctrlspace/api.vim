@@ -57,11 +57,17 @@ function! ctrlspace#api#TabModified(tabnr)
 	endfor
 	return 0
 endfunction
-
+"eyal
 function! ctrlspace#api#Statusline()
 	hi def link User1 CtrlSpaceStatus
 
-	let statusline = "%1*" . s:config.Symbols.CS . "    " . ctrlspace#api#StatuslineModeSegment("    ")
+	let modes          = ctrlspace#modes#Modes()
+	if modes.Workspace.Data.SubMode == "load"
+		let st='l'
+	else
+		let st='s'
+	endif
+	let statusline = "%1*" . s:config.Symbols.CS . st . "    " . ctrlspace#api#StatuslineModeSegment("    ")
 
 	if !&showtabline
 		let statusline .= " %=%1* %<" . ctrlspace#api#StatuslineTabSegment()

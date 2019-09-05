@@ -568,6 +568,13 @@ endfunction
 
 function! s:displayContent()
 	setlocal modifiable
+	"eyal 
+	"let modes          = ctrlspace#modes#Modes()
+	"if modes.Workspace.Data.SubMode == "load"
+	"	silent! put! ="load"	
+	"else
+	"	silent! put! ="save"	
+	"endif
 
 	if b:size > 0
 		silent! put! =b:text

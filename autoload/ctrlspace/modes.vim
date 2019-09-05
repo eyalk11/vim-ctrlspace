@@ -61,6 +61,7 @@ function! s:mode.Disable() dict
 endfunction
 
 function! s:init()
+	call s:mode.new("Workspace", 1, { "SubMode": "load", "Active": { "Name": "", "Digest": "", "Root": "" }, "LastActive": "", "LastBrowsed": 0 })
 	call s:mode.new("Zoom", 0, { "Buffer": 0, "Mode": "", "SubMode": "", "Line": "", "Letters": [] })
 	call s:mode.new("NextTab", 0, {})
 	call s:mode.new("Search", 0, { "Letters": [], "NewSearchPerformed": 0, "Restored": 0, "HistoryIndex": -1 })
@@ -69,7 +70,6 @@ function! s:init()
 	call s:mode.new("Buffer", 1, { "SubMode": "single" })
 	call s:mode.new("File", 1, {})
 	call s:mode.new("Tab", 1, {})
-	call s:mode.new("Workspace", 1, { "SubMode": "load", "Active": { "Name": "", "Digest": "", "Root": "" }, "LastActive": "", "LastBrowsed": 0 })
 	call s:mode.new("Bookmark", 1, { "Active": {} })
 endfunction
 

@@ -35,9 +35,13 @@ function! s:handleAutochdir(switch)
 		unlet s:acdWasOn
 	endif
 endfunction
-
+"Changed eyal
 function! ctrlspace#util#WorkspaceFile()
-	return s:internalFilePath("cs_workspaces")
+	if exists('g:ctrlspaceWorkspace')
+		return g:ctrlspaceWorkspace
+	else
+		return s:internalFilePath("cs_workspaces")
+	endif
 endfunction
 
 function! ctrlspace#util#FilesCache()

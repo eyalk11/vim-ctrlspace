@@ -73,11 +73,10 @@ endfunction
 
 function! s:saveWorkspace(name)
 	let name = ctrlspace#ui#GetInput("Save current workspace as: ", a:name)
-
+	"eyal
 	if empty(name)
 		return 0
 	endif
-
 	call ctrlspace#window#Kill(0, 1)
 	return ctrlspace#workspaces#SaveWorkspace(name)
 endfunction

@@ -71,7 +71,8 @@ function! ctrlspace#workspaces#NewWorkspace()
 	tabo!
 	call ctrlspace#buffers#DeleteHiddenNonameBuffers(1)
 	call ctrlspace#buffers#DeleteForeignBuffers(1)
-	call s:modes.Workspace.SetData("Active", { "Name": "", "Digest": "", "Root": "" })
+	call s:modes.Workspace.SetData("Active", { "Name": "", "Digest": "", "Root": getcwd() })
+"eyal
 endfunction
 
 function! ctrlspace#workspaces#SelectedWorkspaceName()
@@ -178,14 +179,14 @@ endfunction
 " bang == 0) load
 " bang == 1) append
 function! ctrlspace#workspaces#LoadWorkspace(bang, name)
-	if !ctrlspace#roots#ProjectRootFound()
-		return 0
-	endif
+"	if !ctrlspace#roots#ProjectRootFound()
+"		return 0
+"	endif
 
 	call ctrlspace#util#HandleVimSettings("start")
 
 	let cwdSave = fnamemodify(".", ":p:h")
-	silent! exe "cd " . fnameescape(ctrlspace#roots#CurrentProjectRoot())
+	"silent! exe "cd " . fnameescape(ctrlspace#roots#CurrentProjectRoot())
 
 	let filename = ctrlspace#util#WorkspaceFile()
 
@@ -240,7 +241,7 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 	endif
 
 	call s:execWorkspaceCommands(a:bang, name, lines)
-
+	call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
 	if !a:bang
 		let s:modes.Workspace.Data.Active.Digest = ctrlspace#workspaces#CreateDigest()
 		let msg = "Workspace '" . name . "' has been loaded."
@@ -252,7 +253,7 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 	call ctrlspace#ui#Msg(msg)
 	call ctrlspace#ui#DelayedMsg(msg)
 
-	silent! exe "cd " . fnameescape(cwdSave)
+	"silent! exe "cd " . fnameescape(cwdSave)
 
 	call ctrlspace#util#HandleVimSettings("stop")
 
@@ -275,9 +276,9 @@ function! s:execWorkspaceCommands(bang, name, lines)
 		call add(commands, "tabe")
 	endif
 
-	call writefile(a:lines, "CS_SESSION")
+	call writefile(a:lines, g:SessionFile)
 
-	call add(commands, "source CS_SESSION")
+	call add(commands, "source " . g:SessionFile )
 	call add(commands, "redraw!")
 
 	if a:bang
@@ -288,14 +289,18 @@ function! s:execWorkspaceCommands(bang, name, lines)
 		silent exe c
 	endfor
 
-	call delete("CS_SESSION")
+	call delete(g:SessionFile)
 endfunction
 
 function! ctrlspace#workspaces#SaveWorkspace(name)
+	if index( ctrlspace#workspaces#Workspaces(),a:name)<0 || a:name=="default"
+		call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+	endif
 	if !ctrlspace#roots#ProjectRootFound()
 		return 0
 	endif
 
+	
 	call ctrlspace#util#HandleVimSettings("start")
 
 	let cwdSave = fnamemodify(".", ":p:h")
@@ -359,7 +364,8 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let bufs = []
 
 		for [nr, bname] in items(ctrlspaceList)
-			let bufname = fnamemodify(bname, ":.")
+			let bufname = fnamemodify(bname, ":p")
+			"eyal let bufname = fnamemodify(bname, ":.")
 
 			if !filereadable(bufname)
 				continue
@@ -372,9 +378,9 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		call add(tabData, data)
 	endfor
 
-	silent! exe "mksession! CS_SESSION"
+	silent! exe "mksession! ". g:SessionFile
 
-	if !filereadable("CS_SESSION")
+	if !filereadable(g:SessionFile)
 		silent! exe "cd " . fnameescape(cwdSave)
 		silent! exe "set ssop=" . ssopSave
 
@@ -385,7 +391,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 
 	let tabIndex = 0
 
-	for cmd in readfile("CS_SESSION")
+	for cmd in readfile(g:SessionFile)
 		if cmd =~# "^lcd"
 			continue
 
@@ -429,10 +435,11 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		endif
 	endfor
 
+	call add(lines,"cd " . fnameescape(root)) "eyal
 	call add(lines, endMarker)
 
 	call writefile(lines, filename)
-	call delete("CS_SESSION")
+	call delete(g:SessionFile)
 
 	call ctrlspace#workspaces#SetActiveWorkspaceName(name, ctrlspace#workspaces#CreateDigest())
 	call ctrlspace#workspaces#SetWorkspaceNames()
