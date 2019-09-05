@@ -71,8 +71,7 @@ function! ctrlspace#workspaces#NewWorkspace()
 	tabo!
 	call ctrlspace#buffers#DeleteHiddenNonameBuffers(1)
 	call ctrlspace#buffers#DeleteForeignBuffers(1)
-	call s:modes.Workspace.SetData("Active", { "Name": "", "Digest": "", "Root": getcwd() })
-"eyal
+	call s:modes.Workspace.SetData("Active", { "Name": "", "Digest": "", "Root": "" })
 endfunction
 
 function! ctrlspace#workspaces#SelectedWorkspaceName()
@@ -242,6 +241,7 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 
 	call s:execWorkspaceCommands(a:bang, name, lines)
 	call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+
 	if !a:bang
 		let s:modes.Workspace.Data.Active.Digest = ctrlspace#workspaces#CreateDigest()
 		let msg = "Workspace '" . name . "' has been loaded."
@@ -321,9 +321,10 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let name = a:name
 	endif
 
-	let filename = ctrlspace#util#WorkspaceFile()
-	let lastTab  = tabpagenr("$")
+    let cwdSave = fnamemodify(".", ":p:h")
+    let root    = ctrlspace#roots#CurrentProjectRoot()
 
+    silent! exe "cd " . fnameescape(root)
 	let lines       = []
 	let inWorkspace = 0
 
@@ -364,7 +365,6 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let bufs = []
 
 		for [nr, bname] in items(ctrlspaceList)
-			let bufname = fnamemodify(bname, ":p")
 			"eyal let bufname = fnamemodify(bname, ":.")
 
 			if !filereadable(bufname)
@@ -435,7 +435,6 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		endif
 	endfor
 
-	call add(lines,"cd " . fnameescape(root)) "eyal
 	call add(lines, endMarker)
 
 	call writefile(lines, filename)
