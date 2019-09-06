@@ -72,15 +72,6 @@ function! ctrlspace#keys#workspace#ToggleSubmode(k)
 endfunction
 
 function! s:saveWorkspace(name)
-<<<<<<< HEAD
-	let name = ctrlspace#ui#GetInput("Save current workspace as: ", a:name)
-	"eyal
-	if empty(name)
-		return 0
-	endif
-	call ctrlspace#window#Kill(0, 1)
-	return ctrlspace#workspaces#SaveWorkspace(name)
-=======
     let name = ctrlspace#ui#GetInput("Save current workspace as: ", a:name)
 
     if empty(name)
@@ -89,7 +80,6 @@ function! s:saveWorkspace(name)
 
     call ctrlspace#window#Kill(0, 1)
     return ctrlspace#workspaces#SaveWorkspace(name)
->>>>>>> 8e7ae5437196a3f6ef0ccdc4a88317e00d29f6f5
 endfunction
 
 function! s:loadWorkspace(bang, name)

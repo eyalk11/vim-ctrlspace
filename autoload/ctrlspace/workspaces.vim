@@ -253,7 +253,7 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 	call ctrlspace#ui#Msg(msg)
 	call ctrlspace#ui#DelayedMsg(msg)
 
-	"silent! exe "cd " . fnameescape(cwdSave)
+	silent! exe "cd " . fnameescape(cwdSave)
 
 	call ctrlspace#util#HandleVimSettings("stop")
 
@@ -320,9 +320,8 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 	else
 		let name = a:name
 	endif
-
-    let cwdSave = fnamemodify(".", ":p:h")
-    let root    = ctrlspace#roots#CurrentProjectRoot()
+	let filename = ctrlspace#util#WorkspaceFile()
+	let lastTab  = tabpagenr("$")
 
     silent! exe "cd " . fnameescape(root)
 	let lines       = []
@@ -365,6 +364,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let bufs = []
 
 		for [nr, bname] in items(ctrlspaceList)
+			let bufname = fnamemodify(bname, ":.")
 			"eyal let bufname = fnamemodify(bname, ":.")
 
 			if !filereadable(bufname)
@@ -391,7 +391,11 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 
 	let tabIndex = 0
 
+	call add(lines,"set shortmess=aoOcA")
 	for cmd in readfile(g:SessionFile)
+		if cmd=~'shortmess=\(.*\)'
+			let cmd=substitute(cmd,"shortmess=[^\s]*","shortmess=aoOcA",'g')
+		endif 
 		if cmd =~# "^lcd"
 			continue
 
@@ -428,19 +432,24 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 			let tabIndex += 1
 		else
 			let baddList = matchlist(cmd, "\\m^badd \+\\d* \\(.*\\)$")
+				if !(exists("baddList[1]") && !empty(baddList[1]) && !filereadable(baddList[1]))
+					call add(lines, cmd)
+				endif
 
-			if !(exists("baddList[1]") && !empty(baddList[1]) && !filereadable(baddList[1]))
-				call add(lines, cmd)
-			endif
 		endif
 	endfor
 
+	call add(lines,"cd " . fnameescape(root)) "eyal
+	call add(lines,"set shortmess=aoOcA")
 	call add(lines, endMarker)
 
 	call writefile(lines, filename)
 	call delete(g:SessionFile)
 
-	call ctrlspace#workspaces#SetActiveWorkspaceName(name, ctrlspace#workspaces#CreateDigest())
+	if a:name!="default"
+		call ctrlspace#workspaces#SetActiveWorkspaceName(name, ctrlspace#workspaces#CreateDigest())
+	endif
+
 	call ctrlspace#workspaces#SetWorkspaceNames()
 
 	silent! exe "cd " . fnameescape(cwdSave)

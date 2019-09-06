@@ -152,7 +152,7 @@ function! ctrlspace#roots#FindProjectRoot()
             let candidate = fnamemodify(candidate, ":p:h:h")
         endwhile
 
-        return rootFound ? projectRoot : ""
+		return rootFound ? projectRoot : g:defRoot
     endif
 
     return projectRoot
