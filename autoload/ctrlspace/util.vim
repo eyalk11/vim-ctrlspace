@@ -40,6 +40,7 @@ function! ctrlspace#util#WorkspaceFile()
 	if exists('g:ctrlspaceWorkspace')
 		return g:ctrlspaceWorkspace
 	else
+		echoerr "Workspaces file not defined"
 		return s:internalFilePath("cs_workspaces")
 	endif
 endfunction

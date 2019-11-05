@@ -364,7 +364,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let bufs = []
 
 		for [nr, bname] in items(ctrlspaceList)
-			let bufname = fnamemodify(bname, ":.")
+			let bufname = fnamemodify(bname, ":p")
 			"eyal let bufname = fnamemodify(bname, ":.")
 
 			if !filereadable(bufname)
@@ -422,7 +422,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 			if !empty(data.autotab)
 				call add(lines, "let t:CtrlSpaceAutotab = " . data.autotab)
 			endif
-
+"If tabindex==0 then first do edit label and so on , and then addlines 
 			if tabIndex == 0
 				call add(lines, cmd)
 			elseif cmd =~# "^tabedit"
@@ -432,9 +432,9 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 			let tabIndex += 1
 		else
 			let baddList = matchlist(cmd, "\\m^badd \+\\d* \\(.*\\)$")
-				if !(exists("baddList[1]") && !empty(baddList[1]) && !filereadable(baddList[1]))
-					call add(lines, cmd)
-				endif
+				"if !(exists("baddList[1]") && !empty(baddList[1]) && !filereadable(baddList[1]))
+			call add(lines, cmd)
+				"endif
 
 		endif
 	endfor
