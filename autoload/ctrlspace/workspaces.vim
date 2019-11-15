@@ -12,6 +12,8 @@ function! ctrlspace#workspaces#SetWorkspaceNames()
 
 	call s:modes.Workspace.SetData("LastActive", "")
 
+	"echo "fdgdfgdfg"
+	"echo s:workspaces 
 	if filereadable(filename)
 		for line in readfile(filename)
 			if line =~? "CS_WORKSPACE_BEGIN: "
@@ -41,6 +43,10 @@ function! ctrlspace#workspaces#SetActiveWorkspaceName(name, ...)
 			if !(line =~? "CS_LAST_WORKSPACE: ")
 				call add(lines, line)
 			endif
+			"if (line=~? "aaa")
+		""		echo 'aaaaa'
+		""		echo line
+		"	endif
 		endfor
 	endif
 
@@ -293,6 +299,7 @@ function! s:execWorkspaceCommands(bang, name, lines)
 endfunction
 
 function! ctrlspace#workspaces#SaveWorkspace(name)
+	"echoerr "saved"
 	if index( ctrlspace#workspaces#Workspaces(),a:name)<0 || a:name=="default"
 		call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
 	endif
@@ -321,6 +328,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		let name = a:name
 	endif
 	let filename = ctrlspace#util#WorkspaceFile()
+	"echo "adding to" . filename 
 	let lastTab  = tabpagenr("$")
 
     silent! exe "cd " . fnameescape(root)
@@ -381,6 +389,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 	silent! exe "mksession! ". g:SessionFile
 
 	if !filereadable(g:SessionFile)
+		"echo "bad"
 		silent! exe "cd " . fnameescape(cwdSave)
 		silent! exe "set ssop=" . ssopSave
 
@@ -412,6 +421,7 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 			endif
 
 			for b in data.bufs
+				"echo "adding ".  b
 				call add(lines, "edit " . fnameescape(b))
 			endfor
 
@@ -439,15 +449,23 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		endif
 	endfor
 
-	call add(lines,"cd " . fnameescape(root)) "eyal
-	call add(lines,"set shortmess=aoOcA")
 	call add(lines, endMarker)
 
 	call writefile(lines, filename)
 	call delete(g:SessionFile)
 
-	if a:name!="default"
+	call add(lines,"cd " . fnameescape(root)) "eyal
+	call add(lines,"set shortmess=aoOcA")
+
+	let cur=ctrlspace#workspaces#ActiveWorkspace()['Name']
+	if a:name!="default" || cur =="default" || cur ==""
+		"echo "first"
 		call ctrlspace#workspaces#SetActiveWorkspaceName(name, ctrlspace#workspaces#CreateDigest())
+	else
+		"echo "sec"
+		let digest = s:modes.Workspace.Data.Active.Digest 
+		call ctrlspace#workspaces#SetActiveWorkspaceName(name, ctrlspace#workspaces#CreateDigest()) 
+		call ctrlspace#workspaces#SetActiveWorkspaceName(cur, digest) "it wasn't saved , so digest keeps the same 
 	endif
 
 	call ctrlspace#workspaces#SetWorkspaceNames()
