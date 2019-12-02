@@ -191,7 +191,9 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 	call ctrlspace#util#HandleVimSettings("start")
 
 	let cwdSave = fnamemodify(".", ":p:h")
-	"silent! exe "cd " . fnameescape(ctrlspace#roots#CurrentProjectRoot())
+	"if ctrlspace#roots#ProjectRootFound() 
+	"	silent! exe "cd " . fnameescape(ctrlspace#roots#CurrentProjectRoot())
+	"endif
 
 	let filename = ctrlspace#util#WorkspaceFile()
 
@@ -259,7 +261,7 @@ function! ctrlspace#workspaces#LoadWorkspace(bang, name)
 	call ctrlspace#ui#Msg(msg)
 	call ctrlspace#ui#DelayedMsg(msg)
 
-	silent! exe "cd " . fnameescape(cwdSave)
+	"silent! exe "cd " . fnameescape(cwdSave)
 
 	call ctrlspace#util#HandleVimSettings("stop")
 
@@ -300,11 +302,11 @@ endfunction
 
 function! ctrlspace#workspaces#SaveWorkspace(name)
 	"echoerr "saved"
-	if index( ctrlspace#workspaces#Workspaces(),a:name)<0 || a:name=="default"
-		call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
-	endif
+	"if index( ctrlspace#workspaces#Workspaces(),a:name)<0 || a:name=="default"
+	"endif
 	if !ctrlspace#roots#ProjectRootFound()
-		return 0
+		echom "rootnotfound"
+		call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
 	endif
 
 	
@@ -327,6 +329,9 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 	else
 		let name = a:name
 	endif
+"it used to be at first
+	call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+
 	let filename = ctrlspace#util#WorkspaceFile()
 	"echo "adding to" . filename 
 	let lastTab  = tabpagenr("$")
@@ -449,13 +454,14 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 		endif
 	endfor
 
+	call add(lines,"cd " . fnameescape(root)) "eyal
+	call add(lines,"set shortmess=aoOcA")
+
 	call add(lines, endMarker)
 
 	call writefile(lines, filename)
 	call delete(g:SessionFile)
 
-	call add(lines,"cd " . fnameescape(root)) "eyal
-	call add(lines,"set shortmess=aoOcA")
 
 	let cur=ctrlspace#workspaces#ActiveWorkspace()['Name']
 	if a:name!="default" || cur =="default" || cur ==""
