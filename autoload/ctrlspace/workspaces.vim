@@ -315,7 +315,6 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 	let cwdSave = fnamemodify(".", ":p:h")
 	let root    = ctrlspace#roots#CurrentProjectRoot()
 
-	silent! exe "cd " . fnameescape(root)
 
 	if empty(a:name)
 		if !empty(s:modes.Workspace.Data.Active.Name) && s:modes.Workspace.Data.Active.Root ==# root
@@ -329,8 +328,19 @@ function! ctrlspace#workspaces#SaveWorkspace(name)
 	else
 		let name = a:name
 	endif
-"it used to be at first
-	call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+
+	if a:name == "default"  || s:modes.Workspace.Data.Active.Name !=# a:name
+		call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+	else 
+		"If the same one is saved
+		if root != getcwd() && g:overrideCWD==1
+			if ctrlspace#ui#Confirmed('Override CWD')
+				call ctrlspace#roots#SetCurrentProjectRoot(getcwd())
+			endif 
+		endif 
+	endif
+
+	silent! exe "cd " . fnameescape(root)
 
 	let filename = ctrlspace#util#WorkspaceFile()
 	"echo "adding to" . filename 
