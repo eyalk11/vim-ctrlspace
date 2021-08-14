@@ -84,6 +84,47 @@ function! ctrlspace#workspaces#SelectedWorkspaceName()
 	return s:modes.Workspace.Enabled ? s:workspaces[ctrlspace#window#SelectedIndex()] : ""
 endfunction
 
+function! ctrlspace#workspaces#RenameWorkspaceEx(name,new_name)
+	let newName = a:new_name 
+
+	if empty(newName)
+		return 0
+	endif
+
+	for existingName in s:workspaces
+		if newName ==# existingName
+			call ctrlspace#ui#Msg("Workspace '" . newName . "' already exists.")
+			return 0
+		endif
+	endfor
+
+	let filename = ctrlspace#util#WorkspaceFile()
+	let lines    = []
+
+	let workspaceStartMarker = "CS_WORKSPACE_BEGIN: " . a:name
+	let workspaceEndMarker   = "CS_WORKSPACE_END: " . a:name
+	let lastWorkspaceMarker  = "CS_LAST_WORKSPACE: " . a:name
+
+	if filereadable(filename)
+		for line in readfile(filename)
+			if line ==# workspaceStartMarker
+				let line = "CS_WORKSPACE_BEGIN: " . newName
+			elseif line ==# workspaceEndMarker
+				let line = "CS_WORKSPACE_END: " . newName
+			elseif line ==# lastWorkspaceMarker
+				let line = "CS_LAST_WORKSPACE: " . newName
+			endif
+
+			call add(lines, line)
+		endfor
+	endif
+
+	call writefile(lines, filename)
+
+
+	call ctrlspace#workspaces#SetWorkspaceNames()
+	return 1
+endfunction
 function! ctrlspace#workspaces#RenameWorkspace(name)
 	let newName = ctrlspace#ui#GetInput("Rename workspace '" . a:name . "' to: ", a:name)
 
@@ -133,6 +174,39 @@ function! ctrlspace#workspaces#RenameWorkspace(name)
 	return 1
 endfunction
 
+function! ctrlspace#workspaces#DeleteWorkspaceEx(name)
+
+	let filename    = ctrlspace#util#WorkspaceFile()
+	let lines       = []
+	let inWorkspace = 0
+
+	let workspaceStartMarker = "CS_WORKSPACE_BEGIN: " . a:name
+	let workspaceEndMarker   = "CS_WORKSPACE_END: " . a:name
+
+	if filereadable(filename)
+		for oldLine in readfile(filename)
+			if oldLine ==# workspaceStartMarker
+				let inWorkspace = 1
+			endif
+
+			if !inWorkspace
+				call add(lines, oldLine)
+			endif
+
+			if oldLine ==# workspaceEndMarker
+				let inWorkspace = 0
+			endif
+		endfor
+	endif
+
+	call writefile(lines, filename)
+
+
+	call ctrlspace#workspaces#SetWorkspaceNames()
+	"call ctrlspace#ui#DelayedMsg("Workspace '" . a:name . "' has been deleted.")
+
+	return 1
+endfunction
 function! ctrlspace#workspaces#DeleteWorkspace(name)
 	if !ctrlspace#ui#Confirmed("Delete workspace '" . a:name . "'?")
 		return 0
@@ -301,7 +375,7 @@ function! s:execWorkspaceCommands(bang, name, lines)
 endfunction
 
 function! ctrlspace#workspaces#SaveWorkspace(name)
-	"echoerr "saved"
+	"echoerr "saved workspace " . a:name
 	"if index( ctrlspace#workspaces#Workspaces(),a:name)<0 || a:name=="default"
 	"endif
 	if !ctrlspace#roots#ProjectRootFound()
